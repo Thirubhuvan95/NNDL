@@ -1,0 +1,30 @@
+import pandas as pd
+import tensorflow as tf
+from tensorflow.keras import layers
+
+df = pd.read_csv("spam dataset.csv")
+
+df["label"] = df["label"].apply(lambda x: 1 if "spam" in x.lower() else 0)
+
+texts = df["text"].values
+labels = df["label"].values
+
+vec = layers.TextVectorization(max_tokens=5000, output_sequence_length=100)
+vec.adapt(texts)
+
+model = tf.keras.Sequential([
+    vec,
+    layers.Embedding(5000, 16),
+    layers.GlobalAveragePooling1D(),
+    layers.Dense(1, activation="sigmoid")
+])
+
+model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
+
+model.fit(texts, labels, epochs=5, batch_size=32, validation_split=0.2)
+
+sample = ["You won cash prize! Click the link", "Let's meet tomorrow"]
+pred = model.predict(sample)
+
+for text, p in zip(sample, pred):
+    print("SPAM" if p > 0.5 else "NOTSPAM", "->", text)
