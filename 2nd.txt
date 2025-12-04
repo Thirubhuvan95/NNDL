@@ -6,9 +6,8 @@ import numpy as np
 
 df = pd.read_csv("spam dataset.csv")
 texts = df["text"].values
-# Convert 'ham' to 0 and 'spam' to 1
-labels = df["label"].apply(lambda x: 1 if x.lower() == 'spam' else 0).values
 
+labels = df["label"].apply(lambda x: 1 if x.lower() == 'spam' else 0).values
 
 tokenizer = Tokenizer(num_words=500)
 tokenizer.fit_on_texts(texts)
@@ -30,9 +29,7 @@ model.compile(loss="binary_crossentropy",
               optimizer="adam",
               metrics=["accuracy"])
 
-model.fit(padded, labels.astype("float32"),
-          epochs=10, batch_size=32, verbose=1)
-
+model.fit(padded, labels.astype("float32"),epochs=10, batch_size=32, verbose=1)
 
 test_email = ["Get free stuff now!"]
 test_seq = tokenizer.texts_to_sequences(test_email)
@@ -41,3 +38,4 @@ test_padded = pad_sequences(test_seq, maxlen=max_len, padding="post")
 pred = model.predict(test_padded)
 result = "Spam\n" if pred[0, 0] > 0.5 else "Not Spam\n"
 print(f"{result}Probability: {pred[0, 0]:.4f}")
+
