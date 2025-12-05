@@ -31,11 +31,6 @@ model.compile(loss="binary_crossentropy",
 
 model.fit(padded, labels.astype("float32"),epochs=10, batch_size=32, verbose=1)
 
-test_email = ["Get free stuff now!"]
-test_seq = tokenizer.texts_to_sequences(test_email)
-test_padded = pad_sequences(test_seq, maxlen=max_len, padding="post")
-
 pred = model.predict(test_padded)
 result = "Spam\n" if pred[0, 0] > 0.5 else "Not Spam\n"
 print(f"{result}Probability: {pred[0, 0]:.4f}")
-
