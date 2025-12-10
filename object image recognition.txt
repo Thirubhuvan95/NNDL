@@ -47,8 +47,9 @@ else:
     # 4. Predict Top-1 Object Class
     predictions = model.predict(img_array)
 
-    # Decode the prediction (ignore confidence)
+    # Decode the prediction 
     class_id, class_name, _ = decode_predictions(predictions, top=1)[0][0]
 
     # 5. Display Result
+
     print(f"Predicted Object : {class_name}")
