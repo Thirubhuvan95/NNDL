@@ -33,8 +33,6 @@ if image is None:
 else:
     # 3. Display the uploaded image
     cv2_imshow(image) # Use cv2_imshow instead of cv2.imshow
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
 
     # Convert BGR → RGB
     img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -52,8 +50,9 @@ else:
     # 4. Predict Top-1 Class
     predictions = model.predict(img_array)
 
-    # Get ONLY the class name (ignore confidence)
+    # Get ONLY the class name 
     class_id, class_name, _ = decode_predictions(predictions, top=1)[0][0]
 
     # 5. Display Result
     print(f"Predicted images : {class_name}")
+
