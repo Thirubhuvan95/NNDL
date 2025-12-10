@@ -32,7 +32,7 @@ if image is None:
     print("Error: Could not load image. Please check the file path.")
 else:
     # 3. Display the uploaded image
-    cv2_imshow(image) # Use cv2_imshow instead of cv2.imshow
+    cv2_imshow(image) 
 
     # Convert BGR → RGB
     img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -55,4 +55,5 @@ else:
 
     # 5. Display Result
     print(f"Predicted images : {class_name}")
+
 
