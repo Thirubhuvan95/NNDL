@@ -1,0 +1,23 @@
+import numpy as np
+
+# Given values
+delta = 0.5
+y = np.array([5, 8, 3])
+y_pred = np.array([5.7, 7.8, 3.4])
+
+# Error
+error = y - y_pred
+abs_error = np.abs(error)
+
+# Huber loss calculation
+huber_loss = np.where(
+    abs_error <= delta,
+    0.5 * error**2,
+    delta * (abs_error - 0.5 * delta)
+)
+
+# Mean Huber loss
+mean_huber_loss = np.mean(huber_loss)
+
+print("Huber loss for each data point:", huber_loss)
+print("Mean Huber loss:", mean_huber_loss)
