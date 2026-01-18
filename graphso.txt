@@ -1,0 +1,165 @@
+
+# ======================================================
+# 1. Import required libraries
+# ======================================================
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils import class_weight
+from sklearn.metrics import confusion_matrix, precision_recall_curve
+
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.callbacks import EarlyStopping
+
+# ======================================================
+# 2. Configuration / Hyperparameters
+# ======================================================
+TEST_SIZE = 0.2
+RANDOM_STATE = 42
+EPOCHS = 30
+BATCH_SIZE = 512
+LEARNING_RATE = 0.0005
+DROPOUT_RATE = 0.3
+PATIENCE = 3
+
+# ======================================================
+# 3. Load dataset
+# ======================================================
+data = pd.read_csv("creditcard.csv")
+print("Dataset Shape:", data.shape)
+
+# ======================================================
+# 4. Data preprocessing
+# ======================================================
+# Scale 'Amount' feature
+scaler = StandardScaler()
+data['Amount'] = scaler.fit_transform(data[['Amount']])
+
+# Split features (X) and target (y)
+X = data.drop('Class', axis=1)
+y = data['Class']
+
+# Remove NaN values from target (safety, if any exist)
+mask = y.notna()
+X = X[mask]
+y = y[mask]
+
+# ======================================================
+# 5. Train-Test Split
+# ======================================================
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=TEST_SIZE,
+    stratify=y,
+    random_state=RANDOM_STATE
+)
+
+# ======================================================
+# 6. Handle Class Imbalance
+# ======================================================
+# Compute class weights to address class imbalance
+weights = class_weight.compute_class_weight(
+    class_weight='balanced',
+    classes=np.unique(y_train),
+    y=y_train
+)
+class_weights = dict(enumerate(weights))
+
+# ======================================================
+# 7. Build Deep Learning Model (Artificial Neural Network)
+# ======================================================
+model = Sequential([
+    Dense(32, activation='relu', input_shape=(X_train.shape[1],)),
+    Dropout(DROPOUT_RATE),
+    Dense(16, activation='relu'),
+    Dropout(DROPOUT_RATE),
+    Dense(1, activation='sigmoid')
+])
+
+# ======================================================
+# 8. Compile Model
+# ======================================================
+# Using Adam optimizer with a low learning rate for stability
+model.compile(
+    optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE),
+    loss='binary_crossentropy',
+    metrics=['accuracy']
+)
+
+# ======================================================
+# 9. Early Stopping Callback
+# ======================================================
+early_stop = EarlyStopping(
+    monitor='val_loss',
+    patience=PATIENCE,
+    restore_best_weights=True
+)
+
+# ======================================================
+# 10. Train Model
+# ======================================================
+history = model.fit(
+    X_train, y_train,
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE,
+    validation_split=0.2,
+    class_weight=class_weights,
+    callbacks=[early_stop],
+    verbose=1
+)
+
+# ======================================================
+# 11. Make Predictions
+# ======================================================
+y_pred_prob = model.predict(X_test).ravel()
+y_pred = (y_pred_prob > 0.5).astype(int)
+
+# ======================================================
+# 12. Plot Training vs Validation Loss
+# ======================================================
+plt.figure(figsize=(7,5))
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.title("Training vs Validation Loss")
+plt.legend()
+plt.show()
+
+# ======================================================
+# 13. Plot Confusion Matrix
+# ======================================================
+cm = confusion_matrix(y_test, y_pred)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("Confusion Matrix")
+plt.show()
+
+# ======================================================
+# 14. Plot Precision-Recall-F1 vs Threshold
+# ======================================================
+precision, recall, thresholds = precision_recall_curve(y_test, y_pred_prob)
+
+f1_scores = np.where(
+    (precision + recall) == 0,
+    0,
+    2 * (precision * recall) / (precision + recall)
+)
+
+plt.figure(figsize=(8,6))
+plt.plot(thresholds, precision[:-1], '--', label='Precision')
+plt.plot(thresholds, recall[:-1], '--', label='Recall')
+plt.plot(thresholds, f1_scores[:-1], label='F1-score')
+plt.xlabel("Threshold")
+plt.ylabel("Score")
+plt.title("Precision, Recall & F1-score vs Threshold")
+plt.legend()
+plt.grid(True)
+plt.show()
